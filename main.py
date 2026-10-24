@@ -23,19 +23,50 @@ class Task:
         return f'[Completed: {str(self.completed).upper()}]\n\t{self.category}, "{self.priority}" priority task to "{self.title}".\n\tTags: {self.tags}'
 
 
+class TaskManager:
+    def __init__(self) -> None:
+        self.tasks: list[Task] = []
+
+    def add_task(self, task: Task) -> None:
+        self.tasks.append(task)
+
+    def get_all_tasks(self) -> list[Task]:
+        return self.tasks.copy()
+
+    def get_pending_tasks(self) -> list[Task]:
+        return [task for task in self.tasks if not task.completed]
+
+    def search_tasks(self, keyword: str) -> list[Task]:
+        normalizedKey = keyword.casefold()
+        return [
+            task
+            for task in self.tasks
+            if normalizedKey in task.title.casefold()
+            or any(normalizedKey == tag.casefold() for tag in task.tags)
+        ]
+
+    def complete_task(self, index: int) -> None:
+        self.tasks[index].complete()
+
+
 if __name__ == "__main__":
-    task1 = Task("Study Python")
-    task2 = Task("Study Java", "High")
+    manager = TaskManager()
 
-    task1.add_tag("programming")
-    task1.add_tag("python")
+    manager.add_task(Task("Study Python", "High"))
+    manager.add_task(Task("Finish Java assignment"))
+    manager.add_task(Task("Practice Python OOP"))
 
-    print(task1.tags)
-    # ['programming', 'python']
+    manager.complete_task(0)
 
-    print(task2.tags)
-    # []
+    print(len(manager.get_all_tasks()))  # 3
+    print(len(manager.get_pending_tasks()))  # 2
+    print(len(manager.search_tasks("PYTHON")))  # 2
 
-    task1.complete()
-    print(task1.describe())
-    # Your existing formatted description
+    task = Task("Buy groceries")
+    task.add_tag("Important")
+    manager.add_task(task)
+
+    results = manager.search_tasks("IMPORTANT")
+
+    print(len(results))  # 1
+    print(results[0].title)  # Buy groceries
