@@ -1,4 +1,6 @@
-from dataclasses import dataclass, field
+import json
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import ClassVar
 
 
@@ -24,8 +26,21 @@ class Task:
 
 
 class TaskManager:
-    def __init__(self) -> None:
-        self.tasks: list[Task] = []
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.tasks: list[Task] = self.load()
+
+    def save(self) -> None:
+        json_text = json.dumps([asdict(task) for task in self.tasks], indent=2)
+        self.path.write_text(json_text, encoding="utf-8")
+
+    def load(self) -> list[Task]:
+        tasks: list[Task] = []
+        if self.path.exists():
+            json_text = self.path.read_text(encoding="utf-8")
+            data = json.loads(json_text)
+            tasks = [Task(**record) for record in data]
+        return tasks
 
     def add_task(self, task: Task) -> None:
         self.tasks.append(task)
@@ -50,7 +65,8 @@ class TaskManager:
 
 
 def main() -> None:
-    manager = TaskManager()
+    path = Path("./tasks.json")
+    manager = TaskManager(path)
     print("Welcome to Task Manager!")
     print("Commands: add, list, pending, search, complete, quit")
 
@@ -126,6 +142,7 @@ def main() -> None:
                 print("Please enter a valid integer.")
 
         elif command == "quit":
+            manager.save()
             return
 
         else:
