@@ -37,36 +37,101 @@ class TaskManager:
         return [task for task in self.tasks if not task.completed]
 
     def search_tasks(self, keyword: str) -> list[Task]:
-        normalizedKey = keyword.casefold()
+        normalized_key = keyword.casefold()
         return [
             task
             for task in self.tasks
-            if normalizedKey in task.title.casefold()
-            or any(normalizedKey == tag.casefold() for tag in task.tags)
+            if normalized_key in task.title.casefold()
+            or any(normalized_key == tag.casefold() for tag in task.tags)
         ]
 
     def complete_task(self, index: int) -> None:
         self.tasks[index].complete()
 
 
-if __name__ == "__main__":
+def main() -> None:
     manager = TaskManager()
+    print("Welcome to Task Manager!")
+    print("Commands: add, list, pending, search, complete, quit")
 
-    manager.add_task(Task("Study Python", "High"))
-    manager.add_task(Task("Finish Java assignment"))
-    manager.add_task(Task("Practice Python OOP"))
+    while True:
+        user_input = input("> ")
+        command, _, argument = user_input.strip().partition(" ")
+        command = command.casefold()
+        argument = argument.strip()
 
-    manager.complete_task(0)
+        if command == "add":
+            if not argument:
+                print("Invalid title argument.")
+            else:
+                new_task = Task(argument)
+                manager.add_task(new_task)
+                print(f"Added task: {new_task.title}")
 
-    print(len(manager.get_all_tasks()))  # 3
-    print(len(manager.get_pending_tasks()))  # 2
-    print(len(manager.search_tasks("PYTHON")))  # 2
+        elif command == "list":
+            tasks = manager.get_all_tasks()
+            if not tasks:
+                print("No tasks stored.")
+            else:
+                for index, task in enumerate(tasks, start=1):
+                    print(
+                        f"{index}. {task.tags} {task.title}\n\tpriority: {task.priority}\n\tcompleted: {task.completed}"
+                    )
 
-    task = Task("Buy groceries")
-    task.add_tag("Important")
-    manager.add_task(task)
+        elif command == "pending":
+            pending_tasks = [
+                (index, task)
+                for index, task in enumerate(manager.get_all_tasks(), start=1)
+                if not task.completed
+            ]
+            if not pending_tasks:
+                print("No unfinished tasks remaining.")
+            else:
+                for index, task in pending_tasks:
+                    print(
+                        f"{index}. {task.tags} {task.title}\n\tpriority: {task.priority}\n\tcompleted: {task.completed}"
+                    )
 
-    results = manager.search_tasks("IMPORTANT")
+        elif command == "search":
+            results = manager.search_tasks(argument)
 
-    print(len(results))  # 1
-    print(results[0].title)  # Buy groceries
+            if not argument:
+                print("Please enter a search keyword.")
+            elif results:
+                print("\nResults:\n")
+                for index, task in enumerate(manager.get_all_tasks(), start=1):
+                    if task in results:
+                        print(
+                            f"{index}. {task.tags} {task.title}\n\tpriority: {task.priority}\n\tcompleted: {task.completed}"
+                        )
+            else:
+                print("No results.")
+
+        elif command == "complete":
+            tasks = manager.get_all_tasks()
+            try:
+                index = int(argument) - 1
+                if not tasks:
+                    print("No tasks stored.")
+                elif not 0 <= index < len(tasks):
+                    print(f"Task {argument} does not exist in {len(tasks)} task(s).")
+                elif tasks[index].completed:
+                    print(
+                        f"Task {argument}: {tasks[index].title} is already marked completed."
+                    )
+                else:
+                    manager.complete_task(index)
+                    print(f"Completed task {argument}: {tasks[index].title}")
+            except ValueError:
+                print("Please enter a valid integer.")
+
+        elif command == "quit":
+            return
+
+        else:
+            print(f'Command "{command}" unrecognized.')
+            print("Commands: add, list, pending, search, complete, quit")
+
+
+if __name__ == "__main__":
+    main()
