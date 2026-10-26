@@ -44,6 +44,7 @@ class TaskManager:
 
     def add_task(self, task: Task) -> None:
         self.tasks.append(task)
+        self.save()
 
     def get_all_tasks(self) -> list[Task]:
         return self.tasks.copy()
@@ -62,11 +63,18 @@ class TaskManager:
 
     def complete_task(self, index: int) -> None:
         self.tasks[index].complete()
+        self.save()
 
 
 def main() -> None:
     path = Path("./tasks.json")
-    manager = TaskManager(path)
+
+    try:
+        manager = TaskManager(path)
+    except json.JSONDecodeError as error:
+        print(f"Unable to load saved tasks: {error}")
+        return
+
     print("Welcome to Task Manager!")
     print("Commands: add, list, pending, search, complete, quit")
 
